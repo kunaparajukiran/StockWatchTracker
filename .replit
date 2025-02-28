@@ -11,25 +11,6 @@ name = "Project"
 mode = "parallel"
 author = "agent"
 
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "Start application"
-
-[[workflows.workflow]]
-name = "Start application"
-author = "agent"
-
-[workflows.workflow.metadata]
-agentRequireRestartOnSave = false
-
-[[workflows.workflow.tasks]]
-task = "packager.installForAll"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "node scripts/setup-assets.js && npx http-server . --port 5000 --cors"
-waitForPort = 5000
-
 [deployment]
 run = ["sh", "-c", "node scripts/setup-assets.js && npx http-server . --port 5000 --cors"]
 
