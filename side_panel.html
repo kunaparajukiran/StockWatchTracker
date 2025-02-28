@@ -10,6 +10,10 @@
     <div class="container-fluid p-0">
         <div class="watchlist-header">
             <h3 class="mb-2">Watchlists</h3>
+            <!-- Watchlist Navigation -->
+            <div class="nav nav-tabs mb-3" id="watchlistTabs" role="tablist">
+                <!-- Tabs will be dynamically added here -->
+            </div>
             <div class="d-flex gap-2 mb-3">
                 <button class="btn btn-sm btn-outline-primary" id="addListBtn">
                     <i class="fas fa-plus"></i> New List
@@ -67,6 +71,18 @@
             </div>
 
             <div id="stockList" class="stock-list"></div>
+        </div>
+
+        <!-- Toast for notifications -->
+        <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+            <div id="watchlistToast" class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="d-flex">
+                    <div class="toast-body">
+                        New watchlist created successfully!
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            </div>
         </div>
 
         <!-- Context Menu -->

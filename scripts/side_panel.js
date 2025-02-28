@@ -48,6 +48,32 @@ async function loadWatchlists() {
 
     currentWatchlistId = watchlists[0];
     console.log('Current watchlist set to:', currentWatchlistId);
+
+    // Update watchlist tabs
+    updateWatchlistTabs(watchlists);
+}
+
+function updateWatchlistTabs(watchlists) {
+    const tabsContainer = document.getElementById('watchlistTabs');
+    tabsContainer.innerHTML = '';
+
+    watchlists.forEach((watchlistId, index) => {
+        const tab = document.createElement('button');
+        tab.className = `nav-link ${watchlistId === currentWatchlistId ? 'active' : ''}`;
+        tab.setAttribute('data-watchlist-id', watchlistId);
+        tab.textContent = `List ${index + 1}`;
+        tab.onclick = () => switchWatchlist(watchlistId);
+
+        tabsContainer.appendChild(tab);
+    });
+}
+
+function switchWatchlist(watchlistId) {
+    currentWatchlistId = watchlistId;
+    document.querySelectorAll('#watchlistTabs .nav-link').forEach(tab => {
+        tab.classList.toggle('active', tab.getAttribute('data-watchlist-id') === watchlistId);
+    });
+    loadStocks();
 }
 
 async function createNewWatchlist() {
@@ -69,11 +95,16 @@ async function createNewWatchlist() {
         currentWatchlistId = newId;
         console.log('Current watchlist updated to:', currentWatchlistId);
 
+        // Update tabs
+        watchlists.push(newId);
+        updateWatchlistTabs(watchlists);
+
         // Refresh the display
         loadStocks();
 
-        // Show success message
-        alert('New watchlist created!');
+        // Show success toast
+        const toast = new bootstrap.Toast(document.getElementById('watchlistToast'));
+        toast.show();
     } catch (error) {
         console.error('Error creating new watchlist:', error);
         alert('Error creating new watchlist. Please try again.');
