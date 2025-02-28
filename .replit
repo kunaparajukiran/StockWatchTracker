@@ -8,11 +8,21 @@ runButton = "Project"
 
 [[workflows.workflow]]
 name = "Project"
-mode = "parallel"
 author = "agent"
+mode = "parallel"
+
+[workflows.workflow.metadata]
+agentRequireRestartOnSave = false
+
+[[workflows.workflow.tasks]]
+task = "packager.installForAll"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "node scripts/setup-assets.js && npx http-server . --port 5000 --cors --address 0.0.0.0"
 
 [deployment]
-run = ["sh", "-c", "node scripts/setup-assets.js && npx http-server . --port 5000 --cors"]
+run = ["sh", "-c", "node scripts/setup-assets.js && node scripts/generate-icons.js && npx http-server . --port 5000 --cors"]
 
 [[ports]]
 localPort = 5000

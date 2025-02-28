@@ -2,9 +2,11 @@
 let currentViewMode = 'compact';
 let currentList = 'all';
 let contextMenuTarget = null;
+let currentWatchlistId = 'watchlist1';
 
 document.addEventListener('DOMContentLoaded', function() {
     setupEventListeners();
+    loadWatchlists();
     loadStocks();
 });
 
@@ -24,9 +26,58 @@ function setupEventListeners() {
         if (e.key === 'Enter') quickAddStock();
     });
 
+    // New List Button
+    document.getElementById('addListBtn').addEventListener('click', createNewWatchlist);
+
     // Context Menu
     document.addEventListener('click', hideContextMenu);
     setupContextMenu();
+}
+
+async function loadWatchlists() {
+    console.log('Loading watchlists...');
+    const result = await chrome.storage.sync.get(null);
+    const watchlists = Object.keys(result).filter(key => key.startsWith('watchlist'));
+    console.log('Found watchlists:', watchlists);
+
+    if (watchlists.length === 0) {
+        console.log('No watchlists found, creating default watchlist');
+        await chrome.storage.sync.set({ 'watchlist1': [] });
+        watchlists.push('watchlist1');
+    }
+
+    currentWatchlistId = watchlists[0];
+    console.log('Current watchlist set to:', currentWatchlistId);
+}
+
+async function createNewWatchlist() {
+    console.log('Creating new watchlist...');
+    const result = await chrome.storage.sync.get(null);
+    const watchlists = Object.keys(result).filter(key => key.startsWith('watchlist'));
+    console.log('Existing watchlists:', watchlists);
+
+    // Generate new watchlist ID
+    const newId = `watchlist${watchlists.length + 1}`;
+    console.log('New watchlist ID:', newId);
+
+    try {
+        // Initialize new empty watchlist
+        await chrome.storage.sync.set({ [newId]: [] });
+        console.log('New watchlist created successfully');
+
+        // Update current watchlist
+        currentWatchlistId = newId;
+        console.log('Current watchlist updated to:', currentWatchlistId);
+
+        // Refresh the display
+        loadStocks();
+
+        // Show success message
+        alert('New watchlist created!');
+    } catch (error) {
+        console.error('Error creating new watchlist:', error);
+        alert('Error creating new watchlist. Please try again.');
+    }
 }
 
 function setViewMode(mode) {
@@ -50,8 +101,8 @@ function quickAddStock() {
 
     if (!symbol) return;
 
-    chrome.storage.sync.get(['stocks'], function(result) {
-        const stocks = result.stocks || [];
+    chrome.storage.sync.get([currentWatchlistId], function(result) {
+        const stocks = result[currentWatchlistId] || [];
         if (!stocks.find(s => s.symbol === symbol)) {
             stocks.push({
                 symbol,
@@ -60,7 +111,7 @@ function quickAddStock() {
                 addedAt: Date.now()
             });
 
-            chrome.storage.sync.set({ stocks }, function() {
+            chrome.storage.sync.set({ [currentWatchlistId]: stocks }, function() {
                 symbolInput.value = '';
                 loadStocks();
             });
@@ -69,8 +120,8 @@ function quickAddStock() {
 }
 
 function loadStocks() {
-    chrome.storage.sync.get(['stocks'], function(result) {
-        let stocks = result.stocks || [];
+    chrome.storage.sync.get([currentWatchlistId], function(result) {
+        let stocks = result[currentWatchlistId] || [];
 
         // Apply filters
         if (currentList === 'favorites') {
@@ -168,13 +219,13 @@ function setupContextMenu() {
 }
 
 function toggleFavorite(stock) {
-    chrome.storage.sync.get(['stocks'], function(result) {
-        const stocks = result.stocks || [];
+    chrome.storage.sync.get([currentWatchlistId], function(result) {
+        const stocks = result[currentWatchlistId] || [];
         const index = stocks.findIndex(s => s.symbol === stock.symbol);
 
         if (index !== -1) {
             stocks[index].favorite = !stocks[index].favorite;
-            chrome.storage.sync.set({ stocks }, loadStocks);
+            chrome.storage.sync.set({ [currentWatchlistId]: stocks }, loadStocks);
         }
     });
 }
@@ -182,13 +233,13 @@ function toggleFavorite(stock) {
 function setStockColor(stock) {
     const color = prompt('Enter color (hex code or name):', stock.color || '#000000');
     if (color) {
-        chrome.storage.sync.get(['stocks'], function(result) {
-            const stocks = result.stocks || [];
+        chrome.storage.sync.get([currentWatchlistId], function(result) {
+            const stocks = result[currentWatchlistId] || [];
             const index = stocks.findIndex(s => s.symbol === stock.symbol);
 
             if (index !== -1) {
                 stocks[index].color = color;
-                chrome.storage.sync.set({ stocks }, loadStocks);
+                chrome.storage.sync.set({ [currentWatchlistId]: stocks }, loadStocks);
             }
         });
     }
@@ -197,13 +248,13 @@ function setStockColor(stock) {
 function editStock(stock) {
     const newSymbol = prompt('Edit stock symbol:', stock.symbol);
     if (newSymbol) {
-        chrome.storage.sync.get(['stocks'], function(result) {
-            const stocks = result.stocks || [];
+        chrome.storage.sync.get([currentWatchlistId], function(result) {
+            const stocks = result[currentWatchlistId] || [];
             const index = stocks.findIndex(s => s.symbol === stock.symbol);
 
             if (index !== -1) {
                 stocks[index].symbol = newSymbol.toUpperCase();
-                chrome.storage.sync.set({ stocks }, loadStocks);
+                chrome.storage.sync.set({ [currentWatchlistId]: stocks }, loadStocks);
             }
         });
     }
@@ -211,10 +262,10 @@ function editStock(stock) {
 
 function deleteStock(stock) {
     if (confirm(`Delete ${stock.symbol} from watchlist?`)) {
-        chrome.storage.sync.get(['stocks'], function(result) {
-            const stocks = result.stocks || [];
+        chrome.storage.sync.get([currentWatchlistId], function(result) {
+            const stocks = result[currentWatchlistId] || [];
             const newStocks = stocks.filter(s => s.symbol !== stock.symbol);
-            chrome.storage.sync.set({ stocks: newStocks }, loadStocks);
+            chrome.storage.sync.set({ [currentWatchlistId]: newStocks }, loadStocks);
         });
     }
 }
