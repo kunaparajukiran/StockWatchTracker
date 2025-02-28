@@ -13,10 +13,10 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "Server"
+args = "Flask Server"
 
 [[workflows.workflow]]
-name = "Server"
+name = "Flask Server"
 author = "agent"
 
 [workflows.workflow.metadata]
@@ -27,11 +27,11 @@ task = "packager.installForAll"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "npx http-server . --port 5000 --cors"
+args = "node scripts/setup-assets.js && npx http-server . --port 5000 --cors"
 waitForPort = 5000
 
 [deployment]
-run = ["sh", "-c", "npx http-server . --port 5000 --cors"]
+run = ["sh", "-c", "node scripts/setup-assets.js && npx http-server . --port 5000 --cors"]
 
 [[ports]]
 localPort = 5000
