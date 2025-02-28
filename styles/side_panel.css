@@ -336,3 +336,43 @@ body {
 .stock-item:hover .handle {
     opacity: 1;
 }
+
+/* Add these new styles for watchlist management */
+
+/* Inline editing */
+.watchlist-rename-input {
+    max-width: 120px;
+    height: 24px;
+    padding: 2px 6px;
+    margin: -4px 0;
+    font-size: inherit;
+}
+
+/* Modal customization */
+.modal-content {
+    background-color: var(--theme-bg);
+    color: var(--theme-text);
+    border-color: var(--theme-border);
+}
+
+.modal-header {
+    border-bottom-color: var(--theme-border);
+}
+
+.modal-footer {
+    border-top-color: var(--theme-border);
+}
+
+/* Toast customization */
+.toast {
+    background-color: var(--theme-bg);
+    border: 1px solid var(--theme-border);
+}
+
+.toast.bg-success {
+    background-color: var(--theme-success) !important;
+}
+
+.toast.bg-danger {
+    background-color: var(--theme-danger) !important;
+}

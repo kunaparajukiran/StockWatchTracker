@@ -27,7 +27,10 @@ function setupEventListeners() {
     });
 
     // New List Button
-    document.getElementById('addListBtn').addEventListener('click', createNewWatchlist);
+    document.getElementById('addListBtn').addEventListener('click', () => {
+        const modal = new bootstrap.Modal(document.getElementById('newWatchlistModal'));
+        modal.show();
+    });
 
     // Context Menu
     document.addEventListener('click', hideContextMenu);
@@ -36,6 +39,18 @@ function setupEventListeners() {
     // Add watchlist rename context menu
     document.getElementById('watchlistTabs').addEventListener('contextmenu', showWatchlistContextMenu);
     document.addEventListener('click', hideWatchlistContextMenu);
+
+    // Add new watchlist modal handlers
+    document.getElementById('createWatchlistBtn').addEventListener('click', createNewWatchlist);
+    document.getElementById('newWatchlistName').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') createNewWatchlist();
+    });
+
+    // Add confirm delete button handler
+    document.getElementById('confirmDeleteBtn').addEventListener('click', () => {
+        const watchlistId = document.getElementById('confirmDeleteBtn').dataset.watchlistId;
+        if (watchlistId) deleteWatchlist(watchlistId);
+    });
 }
 
 async function loadWatchlists() {
@@ -92,17 +107,15 @@ function switchWatchlist(watchlistId) {
 }
 
 async function createNewWatchlist() {
-    console.log('Creating new watchlist...');
+    const nameInput = document.getElementById('newWatchlistName');
+    const name = nameInput.value.trim();
+    if (!name) return;
+
     const result = await chrome.storage.sync.get(null);
     const watchlists = Object.keys(result).filter(key => key.startsWith('watchlist'));
-    console.log('Existing watchlists:', watchlists);
-
-    const name = prompt('Enter watchlist name:', `Watchlist ${watchlists.length + 1}`);
-    if (!name) return;
 
     // Generate new watchlist ID
     const newId = `watchlist${watchlists.length + 1}`;
-    console.log('New watchlist ID:', newId);
 
     try {
         // Initialize new watchlist with name
@@ -111,23 +124,34 @@ async function createNewWatchlist() {
             stocks: []
         };
         await chrome.storage.sync.set({ [newId]: newWatchlist });
-        console.log('New watchlist created successfully');
 
         // Update current watchlist
         currentWatchlistId = newId;
-        console.log('Current watchlist updated to:', currentWatchlistId);
 
         // Refresh the display
         await loadWatchlists();
         loadStocks();
 
         // Show success toast
-        const toast = new bootstrap.Toast(document.getElementById('watchlistToast'));
-        toast.show();
+        showToast('New watchlist created successfully!');
+
+        // Close modal and reset input
+        const modal = bootstrap.Modal.getInstance(document.getElementById('newWatchlistModal'));
+        modal.hide();
+        nameInput.value = '';
     } catch (error) {
         console.error('Error creating new watchlist:', error);
-        alert('Error creating new watchlist. Please try again.');
+        showToast('Error creating watchlist', 'danger');
     }
+}
+
+// Add this new function to show toasts
+function showToast(message, type = 'success') {
+    const toastEl = document.getElementById('watchlistToast');
+    toastEl.querySelector('.toast-body').textContent = message;
+    toastEl.className = `toast align-items-center text-white bg-${type} border-0`;
+    const toast = new bootstrap.Toast(toastEl);
+    toast.show();
 }
 
 function setViewMode(mode) {
@@ -404,6 +428,8 @@ function deleteStock(stock) {
 
 function showWatchlistContextMenu(e, watchlist) {
     e.preventDefault();
+    if (watchlist.id === 'watchlist1') return; // Don't show context menu for default watchlist
+
     const menu = document.createElement('div');
     menu.id = 'watchlistContextMenu';
     menu.className = 'context-menu';
@@ -411,11 +437,9 @@ function showWatchlistContextMenu(e, watchlist) {
         <div class="context-menu-item" data-action="rename">
             <i class="fas fa-edit"></i> Rename
         </div>
-        ${watchlist.id !== 'watchlist1' ? `
         <div class="context-menu-item text-danger" data-action="delete">
             <i class="fas fa-trash"></i> Delete
         </div>
-        ` : ''}
     `;
 
     menu.style.position = 'fixed';
@@ -434,25 +458,83 @@ function showWatchlistContextMenu(e, watchlist) {
         if (!action) return;
 
         if (action === 'rename') {
-            const newName = prompt('Enter new name:', watchlist.name);
-            if (newName) {
-                const result = await chrome.storage.sync.get(watchlist.id);
-                const watchlistData = result[watchlist.id];
-                watchlistData.name = newName;
-                await chrome.storage.sync.set({ [watchlist.id]: watchlistData });
-                loadWatchlists();
-            }
-        } else if (action === 'delete' && confirm(`Delete watchlist "${watchlist.name}"?`)) {
-            await chrome.storage.sync.remove(watchlist.id);
-            if (currentWatchlistId === watchlist.id) {
-                currentWatchlistId = 'watchlist1';
-            }
-            loadWatchlists();
-            loadStocks();
+            startInlineEdit(watchlist);
+        } else if (action === 'delete') {
+            showDeleteConfirmation(watchlist);
         }
 
         hideWatchlistContextMenu();
     });
+}
+
+function startInlineEdit(watchlist) {
+    const tab = document.querySelector(`[data-watchlist-id="${watchlist.id}"]`);
+    const currentName = tab.textContent;
+
+    // Create inline edit input
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.value = currentName;
+    input.className = 'form-control form-control-sm watchlist-rename-input';
+
+    // Replace tab text with input
+    tab.textContent = '';
+    tab.appendChild(input);
+    input.focus();
+    input.select();
+
+    // Handle input events
+    input.addEventListener('blur', () => finishInlineEdit(watchlist, input));
+    input.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            input.blur();
+        }
+    });
+}
+
+async function finishInlineEdit(watchlist, input) {
+    const newName = input.value.trim();
+    if (newName && newName !== watchlist.name) {
+        try {
+            const result = await chrome.storage.sync.get(watchlist.id);
+            const watchlistData = result[watchlist.id];
+            watchlistData.name = newName;
+            await chrome.storage.sync.set({ [watchlist.id]: watchlistData });
+            showToast('Watchlist renamed successfully!');
+        } catch (error) {
+            console.error('Error renaming watchlist:', error);
+            showToast('Error renaming watchlist', 'danger');
+        }
+    }
+    loadWatchlists(); // Refresh display
+}
+
+function showDeleteConfirmation(watchlist) {
+    const modal = new bootstrap.Modal(document.getElementById('deleteWatchlistModal'));
+    document.getElementById('deleteWatchlistName').textContent = watchlist.name;
+    document.getElementById('confirmDeleteBtn').dataset.watchlistId = watchlist.id;
+    modal.show();
+}
+
+async function deleteWatchlist(watchlistId) {
+    try {
+        await chrome.storage.sync.remove(watchlistId);
+        if (currentWatchlistId === watchlistId) {
+            currentWatchlistId = 'watchlist1';
+        }
+        showToast('Watchlist deleted successfully!');
+
+        // Close modal
+        const modal = bootstrap.Modal.getInstance(document.getElementById('deleteWatchlistModal'));
+        modal.hide();
+
+        // Refresh display
+        loadWatchlists();
+        loadStocks();
+    } catch (error) {
+        console.error('Error deleting watchlist:', error);
+        showToast('Error deleting watchlist', 'danger');
+    }
 }
 
 function hideWatchlistContextMenu() {
