@@ -192,19 +192,27 @@ function quickAddStock() {
 
     chrome.storage.sync.get([currentWatchlistId], function(result) {
         const watchlistData = result[currentWatchlistId];
-        const stocks = watchlistData?.stocks || [];
+        if (!watchlistData) return;
+
+        const stocks = watchlistData.stocks || [];
+
         if (!stocks.find(s => s.symbol === symbol)) {
-            stocks.push({
+            const newStock = {
                 symbol,
                 favorite: false,
                 color: null,
                 addedAt: Date.now()
-            });
+            };
 
-            chrome.storage.sync.set({ [currentWatchlistId]: stocks }, function() {
+            watchlistData.stocks = [...stocks, newStock];
+
+            chrome.storage.sync.set({ [currentWatchlistId]: watchlistData }, function() {
                 symbolInput.value = '';
+                showToast(`Added ${symbol} to watchlist`);
                 loadStocks();
             });
+        } else {
+            showToast(`${symbol} is already in the watchlist`, 'warning');
         }
     });
 }
