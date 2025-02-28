@@ -8,6 +8,48 @@ body {
     padding: 0 10px;
 }
 
+/* View Modes */
+.stock-table {
+    width: 100%;
+    margin-bottom: 1rem;
+}
+
+.stock-table th {
+    cursor: pointer;
+    user-select: none;
+}
+
+.stock-table th:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.stock-row {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+    border: 1px solid #dee2e6;
+    border-radius: 0.25rem;
+}
+
+.stock-logo {
+    width: 24px;
+    height: 24px;
+    margin-right: 0.5rem;
+}
+
+.stock-symbol {
+    font-weight: bold;
+    margin-right: 0.5rem;
+}
+
+.stock-description {
+    color: #6c757d;
+    flex-grow: 1;
+    margin-right: 0.5rem;
+}
+
+/* Color Filters */
 .color-filters {
     display: flex;
     flex-wrap: wrap;
@@ -31,33 +73,58 @@ body {
     border: 2px solid #000;
 }
 
-.stock-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px;
-    margin-bottom: 5px;
-    border-radius: 4px;
-}
-
+/* Stock Actions */
 .stock-actions {
     display: flex;
     gap: 10px;
 }
 
+/* Form Controls */
 .form-control-color {
     width: 50px;
 }
 
+/* Column Management */
+#columnManager .btn-group {
+    flex-wrap: wrap;
+}
+
+#columnManager .btn {
+    margin: 2px;
+}
+
+/* Tab Navigation */
 #addTabBtn {
     padding: 0.5rem 1rem;
 }
 
 .tab-content {
-    height: calc(100vh - 250px);
+    height: calc(100vh - 300px);
     overflow-y: auto;
 }
 
 #stockList {
     margin-bottom: 20px;
+}
+
+/* Sorting Indicators */
+.sort-indicator::after {
+    content: '↓';
+    margin-left: 5px;
+    opacity: 0.5;
+}
+
+.sort-indicator.asc::after {
+    content: '↑';
+}
+
+/* Responsive Design */
+@media (max-width: 576px) {
+    .stock-description {
+        display: none;
+    }
+
+    #columnManager .btn-group {
+        width: 100%;
+    }
 }

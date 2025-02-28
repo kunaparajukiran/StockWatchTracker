@@ -8,16 +8,8 @@ runButton = "Project"
 
 [[workflows.workflow]]
 name = "Project"
+author = "agent"
 mode = "parallel"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "Project"
-
-[[workflows.workflow]]
-name = "Project"
-author = "agent"
 
 [workflows.workflow.metadata]
 agentRequireRestartOnSave = false
@@ -28,7 +20,6 @@ task = "packager.installForAll"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "npx http-server . -p 5000"
-waitForPort = 5000
 
 [deployment]
 run = ["sh", "-c", "npx http-server . -p 5000"]

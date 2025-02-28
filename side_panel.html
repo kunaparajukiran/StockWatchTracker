@@ -10,12 +10,25 @@
     <div class="container-fluid">
         <h3 class="text-center mb-3">Stock Watchlist</h3>
 
+        <!-- View Mode Toggle -->
+        <div class="btn-group mb-3" role="group" aria-label="View Mode">
+            <button type="button" class="btn btn-outline-primary active" id="rowView">
+                <i class="fas fa-list"></i> Row View
+            </button>
+            <button type="button" class="btn btn-outline-primary" id="tableView">
+                <i class="fas fa-table"></i> Table View
+            </button>
+        </div>
+
         <!-- Add Stock Form -->
         <form id="addStockForm" class="mb-3">
-            <div class="input-group">
+            <div class="input-group mb-2">
                 <input type="text" id="stockSymbol" class="form-control" placeholder="Stock Symbol (e.g., AAPL)" required>
                 <input type="color" id="colorPicker" class="form-control form-control-color" value="#ffffff">
                 <button type="submit" class="btn btn-primary">Add</button>
+            </div>
+            <div class="input-group">
+                <input type="text" id="stockDescription" class="form-control" placeholder="Stock Description (optional)">
             </div>
         </form>
 
@@ -26,6 +39,17 @@
                 <button id="clearFilter" class="btn btn-sm btn-outline-secondary">Clear Filter</button>
             </div>
             <div id="colorFilters" class="color-filters mt-2"></div>
+        </div>
+
+        <!-- Column Management (for table view) -->
+        <div id="columnManager" class="mb-3 d-none">
+            <h6>Manage Columns:</h6>
+            <div class="btn-group btn-group-sm" role="group">
+                <button type="button" class="btn btn-outline-secondary" data-column="logo">Logo</button>
+                <button type="button" class="btn btn-outline-secondary active" data-column="symbol">Symbol</button>
+                <button type="button" class="btn btn-outline-secondary active" data-column="description">Description</button>
+                <button type="button" class="btn btn-outline-secondary active" data-column="color">Color</button>
+            </div>
         </div>
 
         <!-- Tabs -->
@@ -45,7 +69,7 @@
         <!-- Tab Content -->
         <div class="tab-content mt-3" id="watchlistContent">
             <div class="tab-pane fade show active" id="watchlist1">
-                <ul id="stockList" class="list-group"></ul>
+                <div id="stockList"></div>
             </div>
         </div>
     </div>
