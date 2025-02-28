@@ -4,6 +4,14 @@ let currentList = 'all';
 let contextMenuTarget = null;
 let currentWatchlistId = 'watchlist1';
 
+function cleanupModal(modalEl) {
+    document.body.classList.remove('modal-open');
+    const backdrop = document.querySelector('.modal-backdrop');
+    if (backdrop) {
+        backdrop.remove();
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     setupEventListeners();
     loadWatchlists();
@@ -50,6 +58,13 @@ function setupEventListeners() {
     document.getElementById('confirmDeleteBtn').addEventListener('click', () => {
         const watchlistId = document.getElementById('confirmDeleteBtn').dataset.watchlistId;
         if (watchlistId) deleteWatchlist(watchlistId);
+    });
+
+    // Add modal cleanup handlers
+    ['newWatchlistModal', 'deleteWatchlistModal'].forEach(modalId => {
+        const modalEl = document.getElementById(modalId);
+        modalEl.addEventListener('hidden.bs.modal', () => cleanupModal(modalEl));
+        modalEl.addEventListener('hide.bs.modal', () => cleanupModal(modalEl));
     });
 }
 
@@ -106,7 +121,6 @@ function switchWatchlist(watchlistId) {
     loadStocks();
 }
 
-// Update createNewWatchlist function to properly handle modal cleanup
 async function createNewWatchlist() {
     const nameInput = document.getElementById('newWatchlistName');
     const name = nameInput.value.trim();
@@ -136,25 +150,17 @@ async function createNewWatchlist() {
         // Show success toast
         showToast('New watchlist created successfully!');
 
-        // Close and cleanup modal
+        // Close modal and reset input
         const modalEl = document.getElementById('newWatchlistModal');
         const modal = bootstrap.Modal.getInstance(modalEl);
         modal.hide();
-        modalEl.addEventListener('hidden.bs.modal', function () {
-            document.body.classList.remove('modal-open');
-            const backdrop = document.querySelector('.modal-backdrop');
-            if (backdrop) {
-                backdrop.remove();
-            }
-            nameInput.value = '';
-        });
+        nameInput.value = '';
     } catch (error) {
         console.error('Error creating new watchlist:', error);
         showToast('Error creating watchlist', 'danger');
     }
 }
 
-// Add this new function to show toasts
 function showToast(message, type = 'success') {
     const toastEl = document.getElementById('watchlistToast');
     toastEl.querySelector('.toast-body').textContent = message;
@@ -525,7 +531,6 @@ function showDeleteConfirmation(watchlist) {
     modal.show();
 }
 
-// Update deleteWatchlist function to properly handle modal cleanup
 async function deleteWatchlist(watchlistId) {
     try {
         await chrome.storage.sync.remove(watchlistId);
@@ -534,17 +539,10 @@ async function deleteWatchlist(watchlistId) {
         }
         showToast('Watchlist deleted successfully!');
 
-        // Close and cleanup modal
+        // Close modal
         const modalEl = document.getElementById('deleteWatchlistModal');
         const modal = bootstrap.Modal.getInstance(modalEl);
         modal.hide();
-        modalEl.addEventListener('hidden.bs.modal', function () {
-            document.body.classList.remove('modal-open');
-            const backdrop = document.querySelector('.modal-backdrop');
-            if (backdrop) {
-                backdrop.remove();
-            }
-        });
 
         // Refresh display
         loadWatchlists();
