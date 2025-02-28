@@ -13,10 +13,10 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "Project"
+args = "Server"
 
 [[workflows.workflow]]
-name = "Project"
+name = "Server"
 author = "agent"
 
 [workflows.workflow.metadata]
@@ -28,6 +28,7 @@ task = "packager.installForAll"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "node scripts/setup-assets.js && node scripts/generate-icons.js && npx http-server . --port 5000 --cors --address 0.0.0.0"
+waitForPort = 5000
 
 [deployment]
 run = ["sh", "-c", "node scripts/setup-assets.js && node scripts/generate-icons.js && npx http-server . --port 5000 --cors"]
