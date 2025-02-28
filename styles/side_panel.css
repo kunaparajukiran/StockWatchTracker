@@ -376,3 +376,26 @@ body {
 .toast.bg-danger {
     background-color: var(--theme-danger) !important;
 }
+
+/* Move Stock Modal customization */
+#moveStockModal .modal-content {
+    background-color: var(--theme-bg);
+    color: var(--theme-text);
+    border-color: var(--theme-border);
+}
+
+#moveStockModal .form-select {
+    background-color: var(--theme-bg);
+    color: var(--theme-text);
+    border-color: var(--theme-border);
+}
+
+#moveStockModal .form-select:focus {
+    border-color: var(--theme-active);
+    box-shadow: 0 0 0 0.25rem rgba(var(--theme-active-rgb), 0.25);
+}
+
+/* Context menu move item icon */
+.context-menu-item[data-action="move"] i {
+    transform: rotate(90deg);
+}

@@ -61,7 +61,7 @@ function setupEventListeners() {
     });
 
     // Add modal cleanup handlers
-    ['newWatchlistModal', 'deleteWatchlistModal'].forEach(modalId => {
+    ['newWatchlistModal', 'deleteWatchlistModal', 'moveStockModal'].forEach(modalId => {
         const modalEl = document.getElementById(modalId);
         modalEl.addEventListener('hidden.bs.modal', () => cleanupModal(modalEl));
         modalEl.addEventListener('hide.bs.modal', () => cleanupModal(modalEl));
@@ -358,7 +358,7 @@ function hideContextMenu() {
 
 function setupContextMenu() {
     document.querySelectorAll('.context-menu-item').forEach(item => {
-        item.addEventListener('click', (e) => {
+        item.addEventListener('click', async (e) => {
             e.stopPropagation();
             const action = item.dataset.action;
 
@@ -371,6 +371,9 @@ function setupContextMenu() {
                 case 'color':
                     setStockColor(contextMenuTarget);
                     break;
+                case 'move':
+                    showMoveStockModal(contextMenuTarget);
+                    break;
                 case 'edit':
                     editStock(contextMenuTarget);
                     break;
@@ -382,6 +385,85 @@ function setupContextMenu() {
             hideContextMenu();
         });
     });
+
+    // Add move stock confirmation handler
+    document.getElementById('confirmMoveBtn').addEventListener('click', moveStock);
+}
+
+async function showMoveStockModal(stock) {
+    const modal = new bootstrap.Modal(document.getElementById('moveStockModal'));
+    const symbolEl = document.getElementById('moveStockSymbol');
+    const selectEl = document.getElementById('targetWatchlist');
+
+    // Set the stock symbol
+    symbolEl.textContent = stock.symbol;
+
+    // Store the stock data for the move operation
+    document.getElementById('confirmMoveBtn').dataset.stockSymbol = stock.symbol;
+
+    // Get all watchlists
+    const result = await chrome.storage.sync.get(null);
+    const watchlists = Object.keys(result)
+        .filter(key => key.startsWith('watchlist'))
+        .filter(id => id !== currentWatchlistId) // Exclude current watchlist
+        .map(id => ({
+            id,
+            name: result[id].name || `Watchlist ${id.replace('watchlist', '')}`
+        }));
+
+    // Populate select options
+    selectEl.innerHTML = watchlists.map(list => 
+        `<option value="${list.id}">${list.name}</option>`
+    ).join('');
+
+    // Show modal if there are watchlists to move to
+    if (watchlists.length > 0) {
+        modal.show();
+    } else {
+        showToast('No other watchlists available to move to', 'warning');
+    }
+}
+
+async function moveStock() {
+    const stockSymbol = document.getElementById('confirmMoveBtn').dataset.stockSymbol;
+    const targetWatchlistId = document.getElementById('targetWatchlist').value;
+
+    try {
+        // Get source and target watchlist data
+        const result = await chrome.storage.sync.get([currentWatchlistId, targetWatchlistId]);
+        const sourceWatchlist = result[currentWatchlistId];
+        const targetWatchlist = result[targetWatchlistId];
+
+        // Find the stock to move
+        const stockIndex = sourceWatchlist.stocks.findIndex(s => s.symbol === stockSymbol);
+        if (stockIndex === -1) {
+            throw new Error('Stock not found in source watchlist');
+        }
+
+        // Get the stock data and remove it from source
+        const [stockToMove] = sourceWatchlist.stocks.splice(stockIndex, 1);
+
+        // Add to target watchlist
+        targetWatchlist.stocks.push(stockToMove);
+
+        // Save both watchlists
+        await chrome.storage.sync.set({
+            [currentWatchlistId]: sourceWatchlist,
+            [targetWatchlistId]: targetWatchlist
+        });
+
+        // Close modal
+        const modalEl = document.getElementById('moveStockModal');
+        const modal = bootstrap.Modal.getInstance(modalEl);
+        modal.hide();
+
+        // Show success message and refresh display
+        showToast('Stock moved successfully!');
+        loadStocks();
+    } catch (error) {
+        console.error('Error moving stock:', error);
+        showToast('Error moving stock', 'danger');
+    }
 }
 
 function toggleFavorite(stock) {
