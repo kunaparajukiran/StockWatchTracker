@@ -28,11 +28,22 @@ function setupEventListeners() {
     document.getElementById('favorites').addEventListener('click', () => setList('favorites'));
     document.getElementById('signals').addEventListener('click', () => setList('signals'));
 
-    // Quick Add
-    document.getElementById('quickAddBtn').addEventListener('click', quickAddStock);
-    document.getElementById('stockSymbol').addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') quickAddStock();
-    });
+    // Quick Add functionality
+    const quickAddBtn = document.getElementById('quickAddBtn');
+    const symbolInput = document.getElementById('stockSymbol');
+
+    if (quickAddBtn) {
+        quickAddBtn.addEventListener('click', quickAddStock);
+    }
+
+    if (symbolInput) {
+        symbolInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault(); // Prevent form submission
+                quickAddStock();
+            }
+        });
+    }
 
     // New List Button
     document.getElementById('addListBtn').addEventListener('click', () => {
@@ -191,12 +202,24 @@ function quickAddStock() {
     if (!symbol) return;
 
     chrome.storage.sync.get([currentWatchlistId], function(result) {
-        const watchlistData = result[currentWatchlistId];
-        if (!watchlistData) return;
+        let watchlistData = result[currentWatchlistId];
+        console.log('Current watchlist data:', watchlistData);
 
-        const stocks = watchlistData.stocks || [];
+        // Initialize watchlist data if it doesn't exist
+        if (!watchlistData) {
+            watchlistData = {
+                name: `Watchlist ${currentWatchlistId.replace('watchlist', '')}`,
+                stocks: []
+            };
+        }
 
-        if (!stocks.find(s => s.symbol === symbol)) {
+        // Initialize stocks array if it doesn't exist
+        if (!watchlistData.stocks) {
+            watchlistData.stocks = [];
+        }
+
+        // Check if stock already exists
+        if (!watchlistData.stocks.find(s => s.symbol === symbol)) {
             const newStock = {
                 symbol,
                 favorite: false,
@@ -204,12 +227,19 @@ function quickAddStock() {
                 addedAt: Date.now()
             };
 
-            watchlistData.stocks = [...stocks, newStock];
+            // Add new stock to the stocks array
+            watchlistData.stocks.push(newStock);
 
+            // Save the updated watchlist
             chrome.storage.sync.set({ [currentWatchlistId]: watchlistData }, function() {
+                if (chrome.runtime.lastError) {
+                    console.error('Error saving stock:', chrome.runtime.lastError);
+                    showToast('Error adding stock', 'danger');
+                    return;
+                }
                 symbolInput.value = '';
                 showToast(`Added ${symbol} to watchlist`);
-                loadStocks();
+                loadStocks(); // Refresh the display
             });
         } else {
             showToast(`${symbol} is already in the watchlist`, 'warning');
