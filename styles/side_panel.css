@@ -137,10 +137,51 @@ body {
     display: flex;
     align-items: center;
     gap: 8px;
+    color: var(--theme-text);
 }
 
 .context-menu-item:hover {
     background-color: var(--theme-hover);
+}
+
+.context-menu-item.text-danger {
+    color: var(--theme-danger);
+}
+
+.context-menu-item i {
+    width: 16px;
+    text-align: center;
+}
+
+/* Watchlist Tabs */
+#watchlistTabs {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+}
+
+#watchlistTabs .nav-link {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 150px;
+    padding: 8px 16px;
+    border: 1px solid var(--theme-border);
+    border-radius: 4px;
+    background: var(--theme-bg);
+    color: var(--theme-text);
+    cursor: pointer;
+}
+
+#watchlistTabs .nav-link:hover {
+    background: var(--theme-hover);
+}
+
+#watchlistTabs .nav-link.active {
+    background: var(--theme-active);
+    color: white;
+    border-color: var(--theme-active);
 }
 
 /* Responsive Design */
@@ -171,12 +212,12 @@ body {
     background-color: rgba(0, 0, 0, 0.05);
 }
 
-.stock-row { /* Renamed for consistency */
+.stock-row {
     display: flex;
     align-items: center;
     padding: 0.75rem;
     margin-bottom: 0.5rem;
-    border: 1px solid var(--theme-border); /* Using theme variable */
+    border: 1px solid var(--theme-border);
     border-radius: 0.25rem;
 }
 
@@ -186,13 +227,11 @@ body {
     margin-right: 0.5rem;
 }
 
-
 .stock-description {
-    color: var(--theme-text); /* Using theme variable */
+    color: var(--theme-text);
     flex-grow: 1;
     margin-right: 0.5rem;
 }
-
 
 /* Color Filters - Adapting original styles */
 .color-filters {
@@ -205,7 +244,7 @@ body {
     width: 25px;
     height: 25px;
     border-radius: 50%;
-    border: 1px solid var(--theme-border); /* Using theme variable */
+    border: 1px solid var(--theme-border);
     cursor: pointer;
     transition: transform 0.2s;
 }
@@ -215,7 +254,7 @@ body {
 }
 
 .color-filter.active {
-    border: 2px solid var(--theme-active); /* Using theme variable */
+    border: 2px solid var(--theme-active);
 }
 
 /* Stock Actions - Keeping original styles */
@@ -237,7 +276,6 @@ body {
 #columnManager .btn {
     margin: 2px;
 }
-
 
 /* Tab Navigation - Keeping original styles */
 #addTabBtn {
@@ -273,4 +311,28 @@ body {
     #columnManager .btn-group {
         width: 100%;
     }
+}
+
+/* Drag and Drop Styles */
+.stock-item {
+    cursor: move;
+    user-select: none;
+    transition: opacity 0.2s ease;
+}
+
+.stock-item.drag-over {
+    border: 2px dashed var(--theme-active);
+    padding: calc(0.75rem - 2px);
+    background-color: var(--theme-hover);
+}
+
+.stock-item .handle {
+    cursor: move;
+    color: var(--theme-border);
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
+}
+
+.stock-item:hover .handle {
+    opacity: 1;
 }
