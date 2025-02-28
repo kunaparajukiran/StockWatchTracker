@@ -106,6 +106,7 @@ function switchWatchlist(watchlistId) {
     loadStocks();
 }
 
+// Update createNewWatchlist function to properly handle modal cleanup
 async function createNewWatchlist() {
     const nameInput = document.getElementById('newWatchlistName');
     const name = nameInput.value.trim();
@@ -135,10 +136,18 @@ async function createNewWatchlist() {
         // Show success toast
         showToast('New watchlist created successfully!');
 
-        // Close modal and reset input
-        const modal = bootstrap.Modal.getInstance(document.getElementById('newWatchlistModal'));
+        // Close and cleanup modal
+        const modalEl = document.getElementById('newWatchlistModal');
+        const modal = bootstrap.Modal.getInstance(modalEl);
         modal.hide();
-        nameInput.value = '';
+        modalEl.addEventListener('hidden.bs.modal', function () {
+            document.body.classList.remove('modal-open');
+            const backdrop = document.querySelector('.modal-backdrop');
+            if (backdrop) {
+                backdrop.remove();
+            }
+            nameInput.value = '';
+        });
     } catch (error) {
         console.error('Error creating new watchlist:', error);
         showToast('Error creating watchlist', 'danger');
@@ -516,6 +525,7 @@ function showDeleteConfirmation(watchlist) {
     modal.show();
 }
 
+// Update deleteWatchlist function to properly handle modal cleanup
 async function deleteWatchlist(watchlistId) {
     try {
         await chrome.storage.sync.remove(watchlistId);
@@ -524,9 +534,17 @@ async function deleteWatchlist(watchlistId) {
         }
         showToast('Watchlist deleted successfully!');
 
-        // Close modal
-        const modal = bootstrap.Modal.getInstance(document.getElementById('deleteWatchlistModal'));
+        // Close and cleanup modal
+        const modalEl = document.getElementById('deleteWatchlistModal');
+        const modal = bootstrap.Modal.getInstance(modalEl);
         modal.hide();
+        modalEl.addEventListener('hidden.bs.modal', function () {
+            document.body.classList.remove('modal-open');
+            const backdrop = document.querySelector('.modal-backdrop');
+            if (backdrop) {
+                backdrop.remove();
+            }
+        });
 
         // Refresh display
         loadWatchlists();
